@@ -42,15 +42,15 @@ class LLMService:
             recent_context += f"{role_name}: {msg['content'][:100]}...\n"
         
         prompt = f"""
-Basándote en el contexto de la conversación, reformula la consulta actual para que sea más clara y específica.
+                    Basándote en el contexto de la conversación, reformula la consulta actual para que sea más clara y específica.
 
-Contexto de la conversación:
-{recent_context}
+                    Contexto de la conversación:
+                    {recent_context}
 
-Consulta actual: "{query}"
+                    Consulta actual: "{query}"
 
-Consulta contextualizada (mantén la intención original pero añade contexto si es necesario):
-"""
+                    Consulta contextualizada (mantén la intención original pero añade contexto si es necesario):
+                """
         
         try:
             response = self.client.chat.completions.create(
@@ -93,24 +93,24 @@ Consulta contextualizada (mantén la intención original pero añade contexto si
                 conversation_context += f"{role_name}: {msg['content'][:150]}...\n"
         
         prompt = f"""
-Eres un asistente experto en productos que mantiene el contexto de conversaciones.
+                    Eres un asistente experto en productos que mantiene el contexto de conversaciones.
 
-{conversation_context}
+                    {conversation_context}
 
-Consulta actual del usuario: "{query}"
+                    Consulta actual del usuario: "{query}"
 
-Productos disponibles:
-{context_text}
+                    Productos disponibles:
+                    {context_text}
 
-Instrucciones:
-1. CONTEXTO: Si hay conversación previa, mantén la continuidad natural
-2. PRODUCTOS: Si hay productos relevantes, recomiéndalos con detalles específicos
-3. CONVERSACIÓN: Mantén un tono amigable y conversacional
-4. HONESTIDAD: Si no hay productos relevantes, sé honesto pero ofrece alternativas
-5. IDIOMA: Responde siempre en español
+                    Instrucciones:
+                    1. CONTEXTO: Si hay conversación previa, mantén la continuidad natural
+                    2. PRODUCTOS: Si hay productos relevantes, recomiéndalos con detalles específicos
+                    3. CONVERSACIÓN: Mantén un tono amigable y conversacional
+                    4. HONESTIDAD: Si no hay productos relevantes, sé honesto pero ofrece alternativas
+                    5. IDIOMA: Responde siempre en español
 
-Respuesta:
-"""
+                    Respuesta:
+                """
         
         try:
             response = self.client.chat.completions.create(

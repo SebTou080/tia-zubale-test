@@ -105,7 +105,6 @@ async def query_products(request: QueryRequest):
             for msg in updated_history
         ]
         
-        # Transform retrieved docs to DocumentReference format
         sources = []
         for doc in result.get("retrieved_docs", []):
             sources.append({

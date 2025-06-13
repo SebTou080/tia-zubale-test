@@ -1,5 +1,3 @@
-// Types for the RAG Chat System
-
 export interface User {
   user_id: string;
   created_at: string;
@@ -77,7 +75,6 @@ export interface ApiResponse<T = any> {
   message?: string;
 }
 
-// Chat types (simplified)
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
@@ -97,7 +94,6 @@ export interface ChatResponse {
   conversation_history: ChatMessage[];
 }
 
-// Form types
 export interface ProductFormData {
   name: string;
   description: string;

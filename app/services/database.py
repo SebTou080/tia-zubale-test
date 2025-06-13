@@ -46,36 +46,6 @@ class DatabaseService:
             ssl='require'
         )
     
-    async def create_product(self, product_data: Dict[str, Any], embedding: List[float]) -> str:
-        """Create a new product with its embedding"""
-        conn = await self.get_connection()
-        try:
-            embedding_str = '[' + ','.join(map(str, embedding)) + ']'
-            
-            import uuid
-            product_id = f"PROD-{str(uuid.uuid4())[:8].upper()}"
-            
-            query = """
-                INSERT INTO products (product_id, name, description, category, price, stock_quantity, specs, embedding)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8::vector)
-                RETURNING product_id
-            """
-            
-            result_id = await conn.fetchval(
-                query,
-                product_id,
-                product_data["name"],
-                product_data["description"],
-                product_data.get("category"),
-                product_data.get("price"),
-                product_data.get("stock_quantity", 0),
-                json.dumps(product_data.get("specs", {})),
-                embedding_str
-            )
-            
-            return result_id
-        finally:
-            await conn.close()
     
     async def store_product(
         self, 
@@ -88,7 +58,7 @@ class DatabaseService:
         embedding: List[float] = None, 
         metadata: Dict[str, Any] = None
     ) -> str:
-        """Store a new product with its embedding (simplified interface)"""
+        """Store a new product with its embedding"""
         conn = await self.get_connection()
         try:
             embedding_str = '[' + ','.join(map(str, embedding)) + ']'
@@ -263,38 +233,5 @@ class DatabaseService:
         
         return sorted_results[:top_k]
     
-    async def get_products_by_ids(self, product_ids: List[str]) -> List[Dict[str, Any]]:
-        """Get products by their IDs"""
-        if not product_ids:
-            return []
-            
-        conn = await self.get_connection()
-        try:
-            query = """
-                SELECT product_id, name, description, category, price, stock_quantity, specs
-                FROM products 
-                WHERE product_id = ANY($1)
-            """
-            
-            rows = await conn.fetch(query, product_ids)
-            
-            results = []
-            for row in rows:
-                results.append({
-                    "id": row["product_id"],
-                    "product_id": row["product_id"],
-                    "name": row["name"],
-                    "description": row["description"] or "",
-                    "category": row["category"],
-                    "price": row["price"],
-                    "stock_quantity": row["stock_quantity"],
-                    "specs": row["specs"],
-                    "content": f"{row['name']} - {row['description'] or ''}"
-                })
-            
-            return results
-        finally:
-            await conn.close()
-
 
 db_service = DatabaseService() 
