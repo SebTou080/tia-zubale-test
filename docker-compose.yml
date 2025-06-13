@@ -1,0 +1,68 @@
+services:
+  # Backend API Service
+  rag-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      # Variables de entorno requeridas
+      - AZURE_POSTGRES_HOST=${AZURE_POSTGRES_HOST}
+      - AZURE_POSTGRES_PORT=${AZURE_POSTGRES_PORT}
+      - AZURE_POSTGRES_DB=${AZURE_POSTGRES_DB}
+      - AZURE_POSTGRES_USER=${AZURE_POSTGRES_USER}
+      - AZURE_POSTGRES_PASSWORD=${AZURE_POSTGRES_PASSWORD}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
+      - AZURE_OPENAI_EMBEDDING_DEPLOYMENT=${AZURE_OPENAI_EMBEDDING_DEPLOYMENT}
+      - AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME}
+      - TOP_K=${TOP_K:-10}
+      - RERANK_TOP_K=${RERANK_TOP_K:-5}
+    env_file:
+      - .env
+    volumes:
+      # Montar código en modo desarrollo (opcional)
+      - ./app:/app/app:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - rag-network
+
+  # Frontend Service
+  rag-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://rag-backend:8000
+      - API_BASE_URL=http://rag-backend:8000
+    depends_on:
+      - rag-backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - rag-network
+
+networks:
+  rag-network:
+    driver: bridge
+
+# Volumes for development (optional)
+volumes:
+  node_modules:
+  next_cache: 
