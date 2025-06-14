@@ -16,7 +16,7 @@ import type { Product } from '@/types';
 
 // Validation schema
 const productSchema = z.object({
-  name: z.string(),
+  name: z.string().optional(),
   description: z.string().optional(),
   category: z.string().optional(),
   price: z.string().optional().transform((val) => val ? parseFloat(val) : undefined),
@@ -41,17 +41,26 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess }) => {
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
+    mode: 'onChange',
   });
 
   const onSubmit = async (data: ProductFormData) => {
     try {
       setIsSubmitting(true);
       setSubmitStatus('idle');
-      console.log("Productt sending to the back ", data)
+      console.log("Form data received:", data);
+      console.log("Name field value:", data.name);
+      console.log("Name field type:", typeof data.name);
+
+      // Validate that name is not empty
+      if (!data.name || data.name.trim() === '') {
+        toast.error('El nombre del producto es requerido');
+        return;
+      }
 
       // Parse specs JSON if provided
       let parsedSpecs = {};
-      if (data.specs) {
+      if (data.specs && data.specs.trim()) {
         try {
           parsedSpecs = JSON.parse(data.specs);
         } catch (e) {
@@ -62,31 +71,33 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess }) => {
 
       // Prepare product data
       const productData: Product = {
-        name: data.name,
+        name: data.name.trim(),
       };
 
       // Add optional fields only if they have values
-      if (data.description) {
-        productData.description = data.description;
+      if (data.description && data.description.trim()) {
+        productData.description = data.description.trim();
       }
-      if (data.category) {
-        productData.category = data.category;
+      if (data.category && data.category.trim()) {
+        productData.category = data.category.trim();
       }
-      if (data.price !== undefined) {
+      if (data.price !== undefined && data.price > 0) {
         productData.price = data.price;
       }
-      if (data.stock_quantity !== undefined) {
+      if (data.stock_quantity !== undefined && data.stock_quantity >= 0) {
         productData.stock_quantity = data.stock_quantity;
       }
       if (Object.keys(parsedSpecs).length > 0) {
         productData.specs = parsedSpecs;
       }
 
+      console.log("Product data being sent to backend:", productData);
+
       // Submit to API
       const response = await productApi.ingestProduct(productData);
 
       setSubmitStatus('success');
-      toast.success(`Producto "${data.name}" agregado exitosamente`, {
+      toast.success(`Producto "${data.name || 'Sin nombre'}" agregado exitosamente`, {
         icon: '🎉',
         duration: 4000,
       });

@@ -8,14 +8,14 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   iconPosition?: 'left' | 'right';
 }
 
-const Input: React.FC<InputProps> = ({
+const Input = React.forwardRef<HTMLInputElement, InputProps>(({
   label,
   error,
   icon: Icon,
   iconPosition = 'left',
   className = '',
   ...props
-}) => {
+}, ref) => {
   const baseClasses = 'block w-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
   const inputClasses = `${baseClasses} border border-gray-300 rounded-lg px-3 py-2 focus:ring-primary-500 focus:border-primary-500 shadow-soft hover:shadow-elegant ${
     Icon && iconPosition === 'left' ? 'pl-10' : ''
@@ -34,7 +34,7 @@ const Input: React.FC<InputProps> = ({
         {Icon && iconPosition === 'left' && (
           <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
         )}
-        <input className={inputClasses} {...props} />
+        <input ref={ref} className={inputClasses} {...props} />
         {Icon && iconPosition === 'right' && (
           <Icon className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
         )}
@@ -44,6 +44,8 @@ const Input: React.FC<InputProps> = ({
       )}
     </div>
   );
-};
+});
+
+Input.displayName = 'Input';
 
 export default Input;
