@@ -12,21 +12,36 @@ class LLMService:
         self.client = AzureOpenAI(
             api_key=settings.azure_openai_api_key,
             api_version=settings.azure_openai_api_version,
-            azure_endpoint=settings.azure_openai_endpoint
+            azure_endpoint=settings.azure_openai_endpoint,
+            timeout=45.0,  # Set timeout for Azure OpenAI calls
+            max_retries=2  # Reduce retries to fail faster
         )
         self.encoding = tiktoken.get_encoding("cl100k_base")
     
     async def generate_embedding(self, text: str) -> List[float]:
-        """Generate embedding for given text"""
+        """Generate embedding for given text with optimized error handling"""
         try:
+            logger.info(f"Generating embedding for text: {text[:100]}...")
+            
+            # Truncate text if too long (Azure OpenAI has token limits)
+            max_tokens = 8000  # Conservative limit for text-embedding-ada-002
+            if len(self.encoding.encode(text)) > max_tokens:
+                tokens = self.encoding.encode(text)[:max_tokens]
+                text = self.encoding.decode(tokens)
+                logger.warning(f"Text truncated to {max_tokens} tokens")
+            
             response = self.client.embeddings.create(
                 input=text,
                 model=settings.azure_openai_embedding_deployment
             )
+            
+            logger.info("Embedding generated successfully")
             return response.data[0].embedding
+            
         except Exception as e:
             logger.error(f"Error generating embedding: {e}")
-            raise
+            # Re-raise with more context
+            raise Exception(f"Failed to generate embedding: {str(e)}")
     
     async def plan_query(self, user_query: str) -> List[str]:
         """Query planning - returns original query"""
