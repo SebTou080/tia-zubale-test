@@ -40,7 +40,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
 
     try {
-      const response = await fetch('/api/query', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      
+      if (!apiUrl) {
+        throw new Error('API URL not configured');
+      }
+      
+      const response = await fetch(`${apiUrl}/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -4,7 +4,8 @@ FROM python:3.11-slim
 # Establecer variables de entorno
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app
+    PYTHONPATH=/app \
+    PORT=8080
 
 # Crear directorio de trabajo
 WORKDIR /app
@@ -32,7 +33,7 @@ RUN useradd --create-home --shell /bin/bash appuser && \
 USER appuser
 
 # Exponer el puerto
-EXPOSE 8000
+EXPOSE 8080
 
-# Comando de inicio
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"] 
+# Comando de inicio con puerto dinámico para Cloud Run
+CMD exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT} 

@@ -138,17 +138,11 @@ cd rag-langgraph-azure
 
 ### 2. Environment Setup
 
-Create environment configuration from the template:
+Create environment configuration files:
 
 ```bash
-cp .env.example .env
-```
-
-### 3. Configure Environment Variables
-
-Edit the `.env` file with your actual credentials:
-
-```bash
+# Backend environment variables
+cat > .env << 'EOF'
 # PostgreSQL Configuration
 AZURE_POSTGRES_HOST=your-postgres-host.postgres.database.azure.com
 AZURE_POSTGRES_PORT=5432
@@ -159,14 +153,27 @@ AZURE_POSTGRES_PASSWORD="your-secure-password"
 # Azure OpenAI Configuration
 AZURE_OPENAI_ENDPOINT=https://your-openai-resource.openai.azure.com
 AZURE_OPENAI_API_KEY="your-api-key"
-AZURE_OPENAI_API_VERSION=2023-05-15
+AZURE_OPENAI_API_VERSION=2023-12-01-preview
 AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-ada-002
 AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o-mini-ragia
 
 # RAG Configuration
 TOP_K=10
 RERANK_TOP_K=5
+EOF
+
+# Frontend environment variables (for local development)
+cat > frontend/.env.local << 'EOF'
+NEXT_PUBLIC_API_URL=http://localhost:8000
+EOF
 ```
+
+### 3. Configure Environment Variables
+
+**Important**: 
+- For **local development**, the frontend uses `http://localhost:8000`
+- For **production deployment**, the API URL is configured automatically by the deployment script
+- Never commit `.env` or `.env.local` files - they contain sensitive data
 
 ### 4. Database Setup
 
@@ -200,6 +207,45 @@ curl http://localhost:8000/health
 
 # Frontend access
 open http://localhost:3000
+```
+
+## 🚀 Production Deployment
+
+### Google Cloud Run Deployment
+
+The project includes an automated deployment script for Google Cloud Run:
+
+```bash
+# Make sure you have gcloud CLI installed and configured
+# Authenticate with your Google Cloud account
+gcloud auth login
+
+# Deploy to Google Cloud Run
+chmod +x deploy-gcp.sh
+./deploy-gcp.sh
+```
+
+The deployment script will:
+1. **Setup GCP project** and enable required APIs
+2. **Deploy backend** container to Cloud Run
+3. **Deploy frontend** container with the backend URL configured automatically
+4. **Output URLs** for both services
+
+### Important Notes for Production:
+- ✅ **No hardcoded URLs**: All service URLs are configured dynamically
+- ✅ **Secure communication**: HTTPS enforced between services
+- ✅ **Auto-scaling**: Both services scale based on demand
+- ✅ **Environment isolation**: Production environment variables are separate
+
+### Troubleshooting Deployment Issues:
+
+If you encounter `ERR_CONNECTION_REFUSED` errors:
+
+1. **Check environment variables**: Ensure `NEXT_PUBLIC_API_URL` is set correctly
+2. **Verify service URLs**: Both services should use HTTPS in production
+3. **Review logs**: Use `gcloud logs tail` to see detailed error messages
+4. **Service communication**: Ensure both services are deployed in the same region
+
 ```
 
 ## ⚙️ Configuration
